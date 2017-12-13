@@ -132,10 +132,12 @@ int gps(byte incomingByte){
         //Serial.println(rmcChecksum);         
 
         if(rmcValid[0]=='A'){
-           latitude = rmcLat;
-           longitude = rmcLon;
+           latitude = rmcLat /100.0;
+           longitude = rmcLon / 100.0;
            latHem = rmcLatHem[0];
            lonHem = rmcLonHem[0];
+           if(latHem=='S') latitude = -latitude;
+           if(lonHem=='W') longitude = -longitude;
            goodGPS = 1;
         }
       }

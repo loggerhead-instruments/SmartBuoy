@@ -18,7 +18,6 @@
 
 // To Do:
 // Transmitter unit
-// - GPS
 // - Direct send to another Iridium modem
 // - Sleep
 
@@ -58,7 +57,7 @@ void setup() {
 void loop() {
     if(sendOnce){
        char payload[100];
-       sprintf(payload, "%f,%s,%f,%s", latitude, latHem, longitude, lonHem);
+       sprintf(payload, "%f,%f", latitude, longitude);
        Serial.print("Payload:");
        Serial.println(payload);
       // isuQueue(payload);
