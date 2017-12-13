@@ -59,3 +59,12 @@ void updateSignalStrength(){
     Serial.println(tmp);
     sigStrength = tmp[7]; 
 }
+
+void iridiumSleep(){
+  
+}
+
+void iridiumWake(){
+  
+}
+

@@ -17,7 +17,7 @@
 char gpsStream[maxChar];
 int streamPos;
 volatile boolean endGpsLog;
-long gpsTimeout;
+
 
 int gps(byte incomingByte){
   char temp2[2];
@@ -204,18 +204,18 @@ void waitForGPS(){
 }
 
 
-int gpsDumpLogger(){
-  // open file for storing data; append
-  endGpsLog = 0;
-   HWSERIAL.println(PMTK_LOCUS_DUMP);
-   int dumping = 1;
-   while(endGpsLog==0){
-       while (HWSERIAL.available() > 0) {    
-        byte incomingByte = HWSERIAL.read();
-        gps(incomingByte);
-        Serial.write(incomingByte);
-       }
-    if(gpsTimeout >= gpsTimeOutThreshold) return 0;
-   }
-   return 1;
-}
+//int gpsDumpLogger(){
+//  // open file for storing data; append
+//  endGpsLog = 0;
+//   HWSERIAL.println(PMTK_LOCUS_DUMP);
+//   int dumping = 1;
+//   while(endGpsLog==0){
+//       while (HWSERIAL.available() > 0) {    
+//        byte incomingByte = HWSERIAL.read();
+//        gps(incomingByte);
+//        Serial.write(incomingByte);
+//       }
+//    if(gpsTimeout >= gpsTimeOutThreshold) return 0;
+//   }
+//   return 1;
+//}

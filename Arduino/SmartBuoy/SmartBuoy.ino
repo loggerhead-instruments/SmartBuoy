@@ -19,13 +19,20 @@
 // To Do:
 // Transmitter unit
 // - Direct send to another Iridium modem
-// - Sleep
+// - hardware sleep pin to Iridium
 
 // Receiver unit
 // - display
+// - buoy ID: lat, lon
 
+#include <Snooze.h>  //using https://github.com/duff2013/Snooze; uncomment line 62 #define USE_HIBERNATE
 
-long gpsTimeOutThreshold = 60 * 15; 
+SnoozeTimer timer;
+// install drivers to a SnoozeBlock
+SnoozeBlock config(timer);
+
+long gpsTimeout;
+long gpsTimeOutThreshold = 60; 
 
 char sigStrength;
 int sendOnce = 1;
@@ -55,27 +62,51 @@ void setup() {
 }
 
 void loop() {
-    if(sendOnce){
-       char payload[100];
-       sprintf(payload, "%f,%f", latitude, longitude);
-       Serial.print("Payload:");
-       Serial.println(payload);
-      // isuQueue(payload);
-       delay(1000);
-      // isuSend();
-       sendOnce = 1; // set to 1 to repeatedly send
+  // get GPS
+  int incomingByte;
+  
+  goodGPS = 0;
+  gpsTimeout = 0; // counts once per second when gets GPS sentence
+  
+  while(!goodGPS){
+    while (HWSERIAL.available() > 0) {    
+        incomingByte = HWSERIAL.read();
+        Serial.write(incomingByte);
+        gps(incomingByte);  // parse incoming GPS data
+    }
+
+    // Send lat and lon via Iridium if good GPS reading
+    if(goodGPS){    
+         char payload[100];
+         sprintf(payload, "%f,%f", latitude, longitude);
+         Serial.print("Payload:");
+         Serial.println(payload);
+         isuQueue(payload);
+         delay(1000);
+         isuSend();
+    }
+    if(gpsTimeout >= gpsTimeOutThreshold) break;
   }
 
-  readISU();
-  updateSignalStrength();
-  Serial.println(sigStrength);
+//  readISU();
+//  updateSignalStrength();
+//  Serial.println(sigStrength);
   
-  int incomingByte;
-  while (HWSERIAL.available() > 0) {    
-      incomingByte = HWSERIAL.read();
-      Serial.write(incomingByte);
-      gps(incomingByte);  // parse incoming GPS data
-  }
+
+  // Sleep 10 minutes or 60 minutes
+  Serial.println("Sleep");
+  gpsHibernate();
+  iridiumSleep();
+
+//  timer.setTimer(1000 * 600);// milliseconds
+//  Snooze.deepSleep(config);
+  delay(1000*600);
+
+  /// ..... SLEEPING ......
+
+  gpsWake();
+  gpsSpewOn();
+  iridiumWake();
 }
 
 
