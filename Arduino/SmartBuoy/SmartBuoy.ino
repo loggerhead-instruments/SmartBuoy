@@ -17,13 +17,10 @@
 
 
 // To Do:
-// Transmitter unit
-// - Direct send to another Iridium modem
 // - hardware sleep pin to Iridium
 
-// Receiver unit
-// - display
-// - buoy ID: lat, lon
+
+int receiverID = 12609;
 
 #include <Snooze.h>  //using https://github.com/duff2013/Snooze; uncomment line 62 #define USE_HIBERNATE
 
@@ -50,15 +47,24 @@ void setup() {
   Serial1.begin(19200, SERIAL_8N1);
   HWSERIAL.begin(9600);
   
-  delay(1000);
+  delay(5000);
   Serial.println("Loggerhead Smart Buoy");
-
   gpsSpewOn();
   
   Serial1.print("AT\r"); //should get OK
   readISU();
   Serial.println("ATE0");
   Serial1.print("ATE0\r"); //echo off
+
+  int incomingByte;
+  while(!goodGPS){
+    while (HWSERIAL.available() > 0) {    
+        incomingByte = HWSERIAL.read();
+        Serial.write(incomingByte);
+        gps(incomingByte);  // parse incoming GPS data
+    }
+    if(gpsTimeout >= 600) break;
+  }
 }
 
 void loop() {
@@ -78,7 +84,7 @@ void loop() {
     // Send lat and lon via Iridium if good GPS reading
     if(goodGPS){    
          char payload[100];
-         sprintf(payload, "%f,%f", latitude, longitude);
+         sprintf(payload, "RB%07d%f,%f", receiverID, latitude, longitude);
          Serial.print("Payload:");
          Serial.println(payload);
          isuQueue(payload);
