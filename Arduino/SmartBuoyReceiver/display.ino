@@ -30,11 +30,11 @@ void updateDisplay(){
 //  display.print(id);
   display.setCursor(20, 0);
   display.print("  S:");
-  display.write(sigStrength);
+  display.print(sigStrength);
 
   display.setTextSize(1);
   display.setCursor(0, 10);
-  display.print(ISU);
+  display.print((char *) rxBuffer);
 //  display.print("Lat:");
 //  display.println(latitude);
 //  display.print("Lon:");
