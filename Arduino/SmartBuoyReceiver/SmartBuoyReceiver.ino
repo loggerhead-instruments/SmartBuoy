@@ -19,9 +19,9 @@
 // To Do:
 
 // Receiver unit
-// poll for new messages every x minutes
 // get new messages on button press
-// - buoy ID: lat, lon
+// store last 20 messages
+// scrolling through messages with button press (up/dn) using LS1
 
 #include "IridiumSBD.h"
 
@@ -29,7 +29,11 @@
 #include <Adafruit_SSD1306.h>
 
 IridiumSBD modem(Serial1);
+#define nMsg 20
+int curMsg, maxMsg, displayMsg;
+
 uint8_t rxBuffer[100];
+uint8_t msgList[nMsg][100];
 
 #define OLED_RESET 4
 Adafruit_SSD1306 display(OLED_RESET);
@@ -108,6 +112,14 @@ void getMessages(){
      /* ...process message in rxBuffer here... */
      Serial.write((char*) rxBuffer);
      updateDisplay();
+     memcpy(msgList[curMsg], rxBuffer, sizeof(rxBuffer[0]) * 100);
+     
+     if (maxMsg<curMsg) maxMsg = curMsg;
+     displayMsg = curMsg;
+     curMsg++;
+     if(curMsg==nMsg) {
+      curMsg = 0; // roll messages
+     }
   }while (modem.getWaitingMessageCount() > 0);
 }
 
@@ -115,39 +127,4 @@ bool ISBDCallback(){
   unsigned ledOn = (millis() / 1000) % 2;
   digitalWrite(13, ledOn ? HIGH : LOW); // blink LED every second during send
   return true;  // return false if you want to cancel Iridium call
-}
-
-
-void readISU(){
-  Serial.println("Read");
-  char ISU[300] = "";
-  char incomingByte;
-  int isuCounter = 0;
-  int timeout = 10;  // time out in seconds
-  unsigned long start = millis();
-
-  while ((millis() - start) < (timeout * 1000)) {
-    if(Serial1.available()>0) {
-      incomingByte = Serial1.read();
-       //ignore line feeds
-      if(incomingByte=='\r'){ 
-        //Serial.println("Got linefeed");
-      }
-      else
-      {
-        ISU[isuCounter] = incomingByte;
-        isuCounter += 1;
-      }
-      if(isuCounter > 1) {
-        if(ISU[isuCounter-1]=='K' & ISU[isuCounter-2]=='O') {
-          //Serial.println("Got OK");
-          while(Serial1.available()){ Serial1.read();} //might be a linefeed to read in
-          break;  //break on OK
-        }
-      }
-    } 
-  }
-  if (isuCounter > 0){
-    Serial.println(ISU);
-  }
 }

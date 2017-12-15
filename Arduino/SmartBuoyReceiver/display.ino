@@ -26,19 +26,20 @@ void cDisplay(){
 void updateDisplay(){
   // show last transmission of each buoy
   cDisplay();
-  display.print("ID:");
-//  display.print(id);
-  display.setCursor(20, 0);
+  display.print(displayMsg);
+  display.print("/");
+  display.print(maxMsg);
+  display.setCursor(50, 0);
   display.print("  S:");
   display.print(sigStrength);
 
   display.setTextSize(1);
-  display.setCursor(0, 10);
-  display.print((char *) rxBuffer);
-//  display.print("Lat:");
-//  display.println(latitude);
-//  display.print("Lon:");
-//  display.println(longitude);
+  display.setCursor(0, 20);
+  display.println((char *) msgList[displayMsg]);
+
+  if(displayMsg>0){
+    display.println((char *) msgList[displayMsg-1]); // display previous message
+  }
   
   display.display();
 }
