@@ -28,7 +28,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-IridiumSBD modem(Serial1, 10);
+IridiumSBD modem(Serial1);
 uint8_t rxBuffer[100];
 
 #define OLED_RESET 4
@@ -43,13 +43,10 @@ int sendOnce = 1;
 float latitude = 0.0;
 float longitude = 0.0;
 
-char ISU[300];
-
 void setup() {
   Serial.begin(115200);
- // Serial1.begin(19200, SERIAL_8N1);
- modem.begin();
-  
+  Serial1.begin(19200, SERIAL_8N1);
+  pinMode(13, OUTPUT);
   delay(5000);
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  //initialize display
   delay(100);
@@ -57,16 +54,28 @@ void setup() {
   display.println("Smart Buoy");
   display.display();
   Serial.println("Loggerhead Smart Buoy");
-  delay(1000);
+
+//  Serial1.print("AT\r"); //should get OK
+//  readISU();
+//  Serial1.print("ATE1\r"); //echo on
+//  readISU();
+  
+  modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE);
+  int result = modem.begin();
+  
+  if(result!=0){
+    Serial.println("Unable to initialize Iridium");
+    Serial.println(result);
+    display.println("Startup Error");
+    display.display();
+    while(1);
+  }
+ Serial.println("Iridium started");
+
 
   modem.getSignalQuality(sigStrength);
   Serial.println(sigStrength);
   updateDisplay();
-
-//  Serial1.print("AT\r"); //should get OK
-//  readISU();
-//  Serial.println("ATE0");
-//  Serial1.print("ATE0\r"); //echo off
 }
 
 void loop() {
@@ -77,6 +86,7 @@ void loop() {
   for (int x=0; x<60; x++){
     delay(10000); // wait 10 s
     modem.getSignalQuality(sigStrength);
+    digitalWrite(13, LOW);
     Serial.println(sigStrength);
     updateDisplay();
   }
@@ -104,6 +114,40 @@ void getMessages(){
 bool ISBDCallback(){
   unsigned ledOn = (millis() / 1000) % 2;
   digitalWrite(13, ledOn ? HIGH : LOW); // blink LED every second during send
-  return true;
+  return true;  // return false if you want to cancel Iridium call
 }
 
+
+void readISU(){
+  Serial.println("Read");
+  char ISU[300] = "";
+  char incomingByte;
+  int isuCounter = 0;
+  int timeout = 10;  // time out in seconds
+  unsigned long start = millis();
+
+  while ((millis() - start) < (timeout * 1000)) {
+    if(Serial1.available()>0) {
+      incomingByte = Serial1.read();
+       //ignore line feeds
+      if(incomingByte=='\r'){ 
+        //Serial.println("Got linefeed");
+      }
+      else
+      {
+        ISU[isuCounter] = incomingByte;
+        isuCounter += 1;
+      }
+      if(isuCounter > 1) {
+        if(ISU[isuCounter-1]=='K' & ISU[isuCounter-2]=='O') {
+          //Serial.println("Got OK");
+          while(Serial1.available()){ Serial1.read();} //might be a linefeed to read in
+          break;  //break on OK
+        }
+      }
+    } 
+  }
+  if (isuCounter > 0){
+    Serial.println(ISU);
+  }
+}
