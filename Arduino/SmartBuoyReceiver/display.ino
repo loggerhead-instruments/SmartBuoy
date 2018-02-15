@@ -1,8 +1,7 @@
 
-/* DISPLAY FUNCTIONS
- *  
+/* 
+ *   DISPLAY FUNCTIONS 
  */
-
  
 void printDigits(int digits){
   // utility function for digital clock display: prints preceding colon and leading 0
@@ -40,6 +39,9 @@ void updateDisplay(){
   if(displayMsg>0){
     display.println((char *) msgList[displayMsg-1]); // display previous message
   }
+
+  display.setCursor(0, BOTTOM);
+  display.print("$$$ EN to Update $$$");
   
   display.display();
 }

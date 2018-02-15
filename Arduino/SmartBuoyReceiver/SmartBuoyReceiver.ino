@@ -3,6 +3,14 @@
 // copyright 2017
 // David Mann
 
+// Wiring
+// Yellow Teensy Pin 0 RX1
+// Orange Teensy Pin 1 TX1
+// Black Ground
+// Red 3.3-4.0V LiPo
+// Green: No connection
+// Brown: No connection
+
 
 // Iridium ISU module needs to be configured for 3-wire (UART) operation
 // Configuration is done using serial connection (e.g. FTDI board)
@@ -15,10 +23,10 @@
 // Commands must have a carriage return \r, not a line feed
 // "AT\r"
 
+// UP/DOWN: Scroll through messages
+// ENTER: Mailbox check
 
 // To Do:
-
-// Receiver unit
 // get new messages on button press
 // store last 20 messages
 // scrolling through messages with button press (up/dn) using LS1
@@ -42,22 +50,30 @@ Adafruit_SSD1306 display(OLED_RESET);
 // SDA 18
 // SCL 19
 
+#define UP_BTN 4
+#define DOWN_BTN 3
+#define ENTER_BTN 8
+
 int sigStrength;
-int sendOnce = 1;
-float latitude = 0.0;
-float longitude = 0.0;
+long startTime;
 
 void setup() {
   Serial.begin(115200);
   Serial1.begin(19200, SERIAL_8N1);
+  pinMode(UP_BTN, INPUT);
+  pinMode(DOWN_BTN, INPUT);
+  pinMode(ENTER_BTN, INPUT);
   pinMode(13, OUTPUT);
-  delay(5000);
+  digitalWrite(UP_BTN, HIGH);
+  digitalWrite(DOWN_BTN, HIGH);
+  digitalWrite(ENTER_BTN, HIGH);
+  
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  //initialize display
-  delay(100);
   cDisplay();
   display.println("Smart Buoy");
   display.display();
   Serial.println("Loggerhead Smart Buoy");
+  delay(2000);
 
 //  Serial1.print("AT\r"); //should get OK
 //  readISU();
@@ -76,25 +92,27 @@ void setup() {
   }
  Serial.println("Iridium started");
 
-
   modem.getSignalQuality(sigStrength);
   Serial.println(sigStrength);
   updateDisplay();
 }
 
+int loopCount = 0;
 void loop() {
-  //readISU();
-  //updateSignalStrength();
-  getMessages();
+  loopCount++;
+  updateButtons();
+  updateDisplay();
+  delay(50);
 
-  for (int x=0; x<60; x++){
-    delay(10000); // wait 10 s
+  if(loopCount > 100){
+    display.setCursor(60, 0);
+    display.println("*");
+    display.display();
     modem.getSignalQuality(sigStrength);
     digitalWrite(13, LOW);
     Serial.println(sigStrength);
-    updateDisplay();
+    loopCount = 0;
   }
-  
 }
 
 void getMessages(){
@@ -111,20 +129,53 @@ void getMessages(){
      if (bufferSize == 0) break; // all done!
      /* ...process message in rxBuffer here... */
      Serial.write((char*) rxBuffer);
-     updateDisplay();
      memcpy(msgList[curMsg], rxBuffer, sizeof(rxBuffer[0]) * 100);
-     
      if (maxMsg<curMsg) maxMsg = curMsg;
      displayMsg = curMsg;
      curMsg++;
      if(curMsg==nMsg) {
       curMsg = 0; // roll messages
      }
+     updateDisplay();
   }while (modem.getWaitingMessageCount() > 0);
 }
 
 bool ISBDCallback(){
   unsigned ledOn = (millis() / 1000) % 2;
   digitalWrite(13, ledOn ? HIGH : LOW); // blink LED every second during send
+  
   return true;  // return false if you want to cancel Iridium call
 }
+
+void updateButtons(){
+  // check for button press
+
+  if(digitalRead(UP_BTN)==0) {
+    delay(100);
+    Serial.println("Up");
+    while(digitalRead(UP_BTN)==0); // wait to let go
+    displayMsg++;
+  }
+  if(digitalRead(DOWN_BTN)==0) {
+    delay(100);
+    Serial.println("Down");
+    while(digitalRead(DOWN_BTN)==0); // wait to let go
+    displayMsg--;
+  }
+  if(digitalRead(ENTER_BTN)==0) {
+    delay(100); // require Enter to be held down to get new message
+    if(digitalRead(ENTER_BTN)==0){
+      Serial.println("Enter");
+      display.setCursor(0, BOTTOM - 20);
+      display.setTextSize(3);
+      display.println("Checking...");
+      display.display();
+      getMessages();
+      while(digitalRead(ENTER_BTN)==0); // wait until let go of Enter to exit
+    }
+  }
+
+  if(displayMsg>maxMsg) displayMsg = 0; //roll display message
+  if(displayMsg<0) displayMsg = maxMsg;
+}
+
