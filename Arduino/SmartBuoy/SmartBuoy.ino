@@ -3,6 +3,9 @@
 // copyright 2017
 // David Mann
 
+// GPS module is Degrees + Decimal Minutes
+// Hard coded to send one message every 10 minutes if have good GPS reading
+
 
 // Iridium ISU module needs to be configured for 3-wire (UART) operation
 // Configuration is done using serial connection (e.g. FTDI board)
@@ -20,7 +23,7 @@
 // - hardware sleep pin to Iridium
 
 
-int receiverID = 12609;
+int receiverID = 12591;
 
 #include <Snooze.h>  //using https://github.com/duff2013/Snooze; uncomment line 62 #define USE_HIBERNATE
 
@@ -84,7 +87,7 @@ void loop() {
     // Send lat and lon via Iridium if good GPS reading
     if(goodGPS){    
          char payload[100];
-         sprintf(payload, "RB%07d%f,%f", receiverID, latitude, longitude);
+         sprintf(payload, "RB%07d %f %f", receiverID, latitude, longitude);
          Serial.print("Payload:");
          Serial.println(payload);
          isuQueue(payload);
@@ -114,5 +117,6 @@ void loop() {
   gpsSpewOn();
   iridiumWake();
 }
+
 
 

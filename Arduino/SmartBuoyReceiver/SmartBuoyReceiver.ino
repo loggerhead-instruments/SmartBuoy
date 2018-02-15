@@ -40,6 +40,7 @@ IridiumSBD modem(Serial1);
 #define nMsg 20
 int curMsg, maxMsg, displayMsg;
 
+
 uint8_t rxBuffer[100];
 uint8_t msgList[nMsg][100];
 
@@ -130,11 +131,12 @@ void getMessages(){
      /* ...process message in rxBuffer here... */
      Serial.write((char*) rxBuffer);
      memcpy(msgList[curMsg], rxBuffer, sizeof(rxBuffer[0]) * 100);
-     if (maxMsg<curMsg) maxMsg = curMsg;
      displayMsg = curMsg;
      curMsg++;
+     if (maxMsg<curMsg) maxMsg = curMsg;
      if(curMsg==nMsg) {
       curMsg = 0; // roll messages
+      maxMsg = nMsg;
      }
      updateDisplay();
   }while (modem.getWaitingMessageCount() > 0);
@@ -166,16 +168,15 @@ void updateButtons(){
     delay(100); // require Enter to be held down to get new message
     if(digitalRead(ENTER_BTN)==0){
       Serial.println("Enter");
-      display.setCursor(0, BOTTOM - 20);
-      display.setTextSize(3);
-      display.println("Checking...");
+      cDisplay();
+      display.println("Wait...");
       display.display();
       getMessages();
       while(digitalRead(ENTER_BTN)==0); // wait until let go of Enter to exit
     }
   }
 
-  if(displayMsg>maxMsg) displayMsg = 0; //roll display message
+  if(displayMsg>=maxMsg) displayMsg = 0; //roll display message
   if(displayMsg<0) displayMsg = maxMsg;
 }
 

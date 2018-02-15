@@ -132,8 +132,8 @@ int gps(byte incomingByte){
         //Serial.println(rmcChecksum);         
 
         if(rmcValid[0]=='A'){
-           latitude = rmcLat /100.0;
-           longitude = rmcLon / 100.0;
+           latitude = rmcLat;
+           longitude = rmcLon;
            latHem = rmcLatHem[0];
            lonHem = rmcLonHem[0];
            if(latHem=='S') latitude = -latitude;
@@ -219,3 +219,4 @@ void waitForGPS(){
 //   }
 //   return 1;
 //}
+
