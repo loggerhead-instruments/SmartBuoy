@@ -22,8 +22,15 @@
 // To Do:
 // - hardware sleep pin to Iridium
 
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define OLED_RESET 4
+Adafruit_SSD1306 display(OLED_RESET);
+#define BOTTOM 55
 
 int receiverID = 12591;
+int intervalSec = 600; //time between transmissions
 
 #include <Snooze.h>  //using https://github.com/duff2013/Snooze; uncomment line 62 #define USE_HIBERNATE
 
@@ -32,7 +39,8 @@ SnoozeTimer timer;
 SnoozeBlock config(timer);
 
 long gpsTimeout;
-long gpsTimeOutThreshold = 60; 
+long gpsTimeOutThreshold = 60; // wait this long trying to get GPS before quitting. This corresponds to number of 'GPRMC' lines. So approximately seconds.
+
 
 char sigStrength;
 int sendOnce = 1;
@@ -42,17 +50,25 @@ char latHem, lonHem;
 int gpsYear = 0, gpsMonth = 1, gpsDay = 1, gpsHour = 0, gpsMinute = 0, gpsSecond = 0;
 int goodGPS = 0;
 
-
+char payload[100];
+       
 #define HWSERIAL Serial2 //GPS
 
 void setup() {
   Serial.begin(115200);
   Serial1.begin(19200, SERIAL_8N1);
   HWSERIAL.begin(9600);
-  
-  delay(5000);
-  Serial.println("Loggerhead Smart Buoy");
+
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  //initialize display
+  delay(1000);
+  cDisplay();
+  display.println("Smart Buoy");
+  display.display();
   gpsSpewOn();
+  
+  delay(4000);
+  Serial.println("Loggerhead Smart Buoy");
+
   
   Serial1.print("AT\r"); //should get OK
   readISU();
@@ -66,6 +82,8 @@ void setup() {
         Serial.write(incomingByte);
         gps(incomingByte);  // parse incoming GPS data
     }
+    cDisplay();
+    updateDisplay();
     if(gpsTimeout >= 600) break;
   }
 }
@@ -83,19 +101,23 @@ void loop() {
         Serial.write(incomingByte);
         gps(incomingByte);  // parse incoming GPS data
     }
-
-    // Send lat and lon via Iridium if good GPS reading
-    if(goodGPS){    
-         char payload[100];
-         sprintf(payload, "RB%07d %f %f", receiverID, latitude, longitude);
-         Serial.print("Payload:");
-         Serial.println(payload);
-         isuQueue(payload);
-         delay(1000);
-         isuSend();
-    }
     if(gpsTimeout >= gpsTimeOutThreshold) break;
   }
+  cDisplay();
+  updateDisplay();
+
+  // Send lat and lon via Iridium if good GPS reading...assume will also have satellite
+  if(goodGPS){  
+       displaySend();  
+       sprintf(payload, "RB%07d %f %f", receiverID, latitude, longitude);
+       Serial.print("Payload:");
+       Serial.println(payload);
+       isuQueue(payload);
+       delay(2000);
+       isuSend();
+       delay(10000);
+  }
+
 
 //  readISU();
 //  updateSignalStrength();
@@ -104,12 +126,15 @@ void loop() {
 
   // Sleep 10 minutes or 60 minutes
   Serial.println("Sleep");
+  cDisplay();
+  displayPayload();
+  displaySleep();
   gpsHibernate();
   iridiumSleep();
 
 //  timer.setTimer(1000 * 600);// milliseconds
 //  Snooze.deepSleep(config);
-  delay(1000*600);
+  delay(1000*intervalSec);
 
   /// ..... SLEEPING ......
 
