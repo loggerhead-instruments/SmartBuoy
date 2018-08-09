@@ -3,7 +3,7 @@
 #define HWSERIAL Serial2 // GPS
 
 long gpsTimeout;
-long gpsTimeOutThreshold = 60; // wait this long trying to get GPS before quitting. This corresponds to number of 'GPRMC' lines. So approximately seconds.
+long gpsTimeOutThreshold = 10000; // milliseconds
 float latitude = 0.0;
 float longitude = 0.0;
 char latHem, lonHem;
@@ -21,35 +21,44 @@ void setup() {
   Serial1.println("Smart Buoy");
 
   gpsSpewOn();
-  
-
+  gpsTimeout = 0;
 }
 
 int counter;
+long startTime = millis();
 void loop() {
 
   // get GPS
   int incomingByte;
   
   goodGPS = 0;
-  gpsTimeout = 0; // counts once per second when gets GPS sentence
-  
-  while(!goodGPS){
+  while(!goodGPS | (millis()-startTime<gpsTimeOutThreshold)){
     while (HWSERIAL.available() > 0) {    
         incomingByte = HWSERIAL.read();
         Serial.write(incomingByte);
         gps(incomingByte);  // parse incoming GPS data
     }
-    if(gpsTimeout >= gpsTimeOutThreshold) break;
   }
-  HWSERIAL.print('*');
-  HWSERIAL.print(BUOY);
-  HWSERIAL.print(":");
-  // only send GPS if good reading; if bad GPS will only send buoy #
-  if(goodGPS){  
-    HWSERIAL.print(latitude);
-    HWSERIAL.print(" ");
-    HWSERIAL.print(longitude);
+
+  // only send every timeout
+  if(millis()-startTime>=gpsTimeOutThreshold){
+    Serial1.write('*');
+    Serial1.print(BUOY);
+    Serial1.print(":");
+    Serial.print(BUOY);
+    Serial.print(":");
+    // only send GPS if good reading; if bad GPS will only send buoy #
+    if(goodGPS){  
+      Serial1.print(latitude, 4);
+      Serial1.print(" ");
+      Serial1.print(longitude, 4);
+      Serial.print(latitude, 4);
+      Serial.print(" ");
+      Serial.println(longitude, 4);
+    }
+    Serial1.println('!');
+    Serial1.flush();
+    Serial.println('!');
   }
-  HWSERIAL.print('!');
+  startTime = millis();
 }

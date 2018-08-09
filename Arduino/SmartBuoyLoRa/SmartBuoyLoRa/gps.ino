@@ -63,8 +63,6 @@ int gps(byte incomingByte){
        //char temp[100];
        const char s[2] = ",";
        char *token;
-
-        gpsTimeout += 1;
             
         memcpy(&temp, &gpsStream, streamPos);
         //Serial.println(temp);s
