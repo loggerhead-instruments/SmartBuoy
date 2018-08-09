@@ -17,7 +17,6 @@
 // WOR timing: 250 ms
 // IO mode: Push/Pull
 
-#define LED 13
 #define BUOY 1
 #define HWSERIAL Serial2 // GPS
 
