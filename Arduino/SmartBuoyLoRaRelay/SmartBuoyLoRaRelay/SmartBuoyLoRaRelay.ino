@@ -1,7 +1,16 @@
+// SmartBuoyLoRaRelay
+// Retransmits any received messages
+// incoming message format for relay: 
+//     start with *
+//     end with !
+
+// upon relay, add 'r' in front because may receive direct message
+
+// 2018 David Mann, Loggerhead Instruments
+
 // To do:
-// - receive
-// - re-transmit
 // - GPS
+// - measure power draw
 
 // LoRa Module Parameters (set from EByte RFSetting program)
 // Disconnect M0 and M1 jumpers to program module

@@ -1,9 +1,29 @@
+// SmartBuoyLoRa
+// Transmit GPS position only
+// 2018 David Mann, Loggerhead Instruments
+
+// To do: 
+// - Sleep between transmissions
+// - Test collisions
+
+// LoRa Module Parameters (set from EByte RFSetting program)
+// Disconnect M0 and M1 jumpers to program module
+// UartRate 9600
+// Parity: 8N1
+// AirRate: 300
+// Power: 30 dBm
+// FEC: Enable
+// Fixed mode: disable
+// WOR timing: 250 ms
+// IO mode: Push/Pull
+
 #define LED 13
 #define BUOY 1
 #define HWSERIAL Serial2 // GPS
 
 long gpsTimeout;
-long gpsTimeOutThreshold = 10000; // milliseconds
+long gpsTimeOutThreshold = 10000; // milliseconds between transmissions
+
 float latitude = 0.0;
 float longitude = 0.0;
 char latHem, lonHem;
