@@ -52,7 +52,7 @@ void loop() {
   int incomingByte;
   
   goodGPS = 0;
-  while(!goodGPS | (millis()-startTime<gpsTimeOutThreshold)){
+  while(millis()-startTime<gpsTimeOutThreshold){
     while (HWSERIAL.available() > 0) {    
         incomingByte = HWSERIAL.read();
         Serial.write(incomingByte);
