@@ -3,3 +3,5 @@
 *.Zip
 *.SchDocPreview
 *.LOG
+*.PcbDocPreview
+*.PrjPCBStructure
