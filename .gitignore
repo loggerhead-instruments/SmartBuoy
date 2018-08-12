@@ -5,3 +5,5 @@
 *.LOG
 *.PcbDocPreview
 *.PrjPCBStructure
+*.html
+*.drc
