@@ -22,9 +22,19 @@ void cDisplay(){
   display.setCursor(0,0);
 }
 
-void displaySettings(){
+void displayGps(){
+  display.setCursor(0, 0);
+  display.setTextSize(1);
+  display.print("Buoy ");
+  display.print(BUOY);
   display.setTextSize(1);
   display.setTextColor(WHITE);
+  display.setCursor(0, displayLine3);
+  display.print("Lat: ");
+  display.print(latitude);
+  display.setCursor(0, displayLine4);
+  display.print("Lon: ");
+  display.print(longitude);
 }
 
 void displayBattery(){

@@ -59,6 +59,10 @@ void setup() {
   displayOn();
   cDisplay();
   display.println("Loggerhead");
+  display.setCursor(0, displayLine3);
+  display.setTextSize(2);
+  display.print("Buoy ");
+  display.print(BUOY);
   display.display();
 
   gpsSpewOn();
@@ -79,6 +83,11 @@ void loop() {
         incomingByte = HWSERIAL.read();
         Serial.write(incomingByte);
         gps(incomingByte);  // parse incoming GPS data
+    }
+    if(goodGPS){
+      cDisplay();
+      displayGps();
+      display.display();
     }
   }
 
