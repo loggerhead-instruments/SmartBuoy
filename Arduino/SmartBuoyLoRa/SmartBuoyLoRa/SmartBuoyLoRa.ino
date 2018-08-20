@@ -29,6 +29,15 @@
 #define LED 17
 #define vSense A14
 
+// LoRa
+#define M0 22
+#define M1 23
+#define AUX 21
+#define NORMAL 0
+#define WAKEUP 1
+#define POWERSAVING 2
+#define SLEEP 3
+
 #define displayLine1 0
 #define displayLine2 8
 #define displayLine3 16
@@ -51,6 +60,11 @@ void setup() {
   HWSERIAL.begin(9600);
   pinMode(LED, OUTPUT);
   digitalWrite(LED, HIGH);
+
+  pinMode(M1, OUTPUT);
+  pinMode(M0, OUTPUT);
+  loraMode(NORMAL);
+  
   delay(4000);
   Serial.println("Loggerhead Smart Buoy");
   Serial1.println("Smart Buoy");
@@ -131,3 +145,26 @@ float readVoltage(){
    pinMode(vSense, OUTPUT);  // done reading voltage
    return voltage;
 }
+
+void loraMode(int mode){
+  switch(mode){
+    case NORMAL: 
+      digitalWrite(M0, LOW);
+      digitalWrite(M1, LOW);
+      break;
+    case WAKEUP:
+      digitalWrite(M0, LOW);
+      digitalWrite(M1, HIGH);
+      break;
+    case POWERSAVING:
+      digitalWrite(M0, HIGH);
+      digitalWrite(M1, LOW);
+      break;
+    case SLEEP:
+      digitalWrite(M0, HIGH);
+      digitalWrite(M1, HIGH);
+      break;
+  }
+  
+}
+
