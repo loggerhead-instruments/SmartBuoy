@@ -63,6 +63,7 @@ void setup() {
 
   gpsSpewOn();
   gpsTimeout = 0;
+  digitalWrite(LED, LOW);
 }
 
 int counter;
@@ -83,6 +84,7 @@ void loop() {
 
   // only send every timeout
   if(millis()-startTime>=gpsTimeOutThreshold){
+    digitalWrite(LED, HIGH);
     Serial1.write('*');
     Serial1.print(BUOY);
     Serial1.print(":");
@@ -102,6 +104,7 @@ void loop() {
     Serial.println('!');
   }
   startTime = millis();
+  digitalWrite(LED, LOW);
 }
 
 float readVoltage(){
