@@ -50,6 +50,7 @@ void setup() {
 
   HWSERIAL.begin(9600);
   pinMode(LED, OUTPUT);
+  digitalWrite(LED, HIGH);
   delay(4000);
   Serial.println("Loggerhead Smart Buoy");
   Serial1.println("Smart Buoy");
