@@ -96,6 +96,7 @@ void setup() {
   modem.getSignalQuality(sigStrength);
   Serial.println(sigStrength);
   updateDisplay();
+  
 }
 
 int loopCount = 0;
@@ -171,12 +172,35 @@ void updateButtons(){
       cDisplay();
       display.println("Wait...");
       display.display();
-      getMessages();
+      //getMessages();
+      sendMessage();
       while(digitalRead(ENTER_BTN)==0); // wait until let go of Enter to exit
     }
   }
 
   if(displayMsg>=maxMsg) displayMsg = 0; //roll display message
   if(displayMsg<0) displayMsg = maxMsg;
+}
+
+void sendMessage(){
+  int err = modem.sendSBDText("20180817T140000;26.4321;-82.3476;g:12;nh:70,10,1,4");
+  if (err != ISBD_SUCCESS)
+  {
+    Serial.print("sendSBDText failed: error ");
+    Serial.println(err);
+    cDisplay();
+    display.println("Send fail");
+    display.display();
+    if (err == ISBD_SENDRECEIVE_TIMEOUT)
+      Serial.println("Try again with a better view of the sky.");
+  }
+
+  else
+  {
+    cDisplay();
+    display.println("Success");
+    display.display();
+    Serial.println("Hey, it worked!");
+  }
 }
 

@@ -92,31 +92,41 @@ void loop() {
   // get GPS
   int incomingByte;
   
-  goodGPS = 0;
-  gpsTimeout = 0; // counts once per second when gets GPS sentence
-  
-  while(!goodGPS){
-    while (HWSERIAL.available() > 0) {    
-        incomingByte = HWSERIAL.read();
-        Serial.write(incomingByte);
-        gps(incomingByte);  // parse incoming GPS data
-    }
-    if(gpsTimeout >= gpsTimeOutThreshold) break;
-  }
-  cDisplay();
-  updateDisplay();
+//  goodGPS = 0;
+//  gpsTimeout = 0; // counts once per second when gets GPS sentence
+//  
+//  while(!goodGPS){
+//    while (HWSERIAL.available() > 0) {    
+//        incomingByte = HWSERIAL.read();
+//        Serial.write(incomingByte);
+//        gps(incomingByte);  // parse incoming GPS data
+//    }
+//    if(gpsTimeout >= gpsTimeOutThreshold) break;
+//  }
+//  cDisplay();
+//  updateDisplay();
+//
+//  // Send lat and lon via Iridium if good GPS reading...assume will also have satellite
+//  if(goodGPS){  
+//       displaySend();  
+//       //sprintf(payload, "RB%07d %f %f", receiverID, latitude, longitude);
+//       sprintf(payload, "%f %f", latitude, longitude);
+//       Serial.print("Payload:");
+//       Serial.println(payload);
+//       isuQueue(payload);
+//       delay(2000);
+//       isuSend();
+//       delay(10000);
+//  }
 
-  // Send lat and lon via Iridium if good GPS reading...assume will also have satellite
-  if(goodGPS){  
-       displaySend();  
-       sprintf(payload, "RB%07d %f %f", receiverID, latitude, longitude);
+
+       sprintf(payload, "%f %f", 26.223, -82.345);
        Serial.print("Payload:");
        Serial.println(payload);
        isuQueue(payload);
        delay(2000);
        isuSend();
        delay(10000);
-  }
 
 
 //  readISU();
