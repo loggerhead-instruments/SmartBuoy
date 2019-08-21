@@ -71,7 +71,7 @@ void setup() {
   
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  //initialize display
   cDisplay();
-  display.println("Smart Buoy");
+  display.println("Sat Buoy");
   display.display();
   Serial.println("Loggerhead Smart Buoy");
   delay(2000);
@@ -172,8 +172,8 @@ void updateButtons(){
       cDisplay();
       display.println("Wait...");
       display.display();
-      //getMessages();
-      sendMessage();
+      getMessages();
+      //sendMessage();
       while(digitalRead(ENTER_BTN)==0); // wait until let go of Enter to exit
     }
   }
