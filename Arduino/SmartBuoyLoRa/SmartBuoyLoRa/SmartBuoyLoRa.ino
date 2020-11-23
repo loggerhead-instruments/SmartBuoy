@@ -17,8 +17,32 @@
 // WOR timing: 250 ms
 // IO mode: Push/Pull
 
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h> // modify so calls i2c_t3 not Wire.h
+#include <Adafruit_FeatherOLED.h>
+#include <TimeLib.h>
+#include <EEPROM.h>
+
 #define BUOY 1
 #define HWSERIAL Serial2 // GPS
+
+#define LED 17
+#define vSense A14
+
+// LoRa
+#define M0 22
+#define M1 23
+#define AUX 21
+#define NORMAL 0
+#define WAKEUP 1
+#define POWERSAVING 2
+#define SLEEP 3
+
+#define displayLine1 0
+#define displayLine2 8
+#define displayLine3 16
+#define displayLine4 25
+Adafruit_FeatherOLED display = Adafruit_FeatherOLED();
 
 long gpsTimeout;
 long gpsTimeOutThreshold = 10000; // milliseconds between transmissions
@@ -35,12 +59,29 @@ void setup() {
 
   HWSERIAL.begin(9600);
   pinMode(LED, OUTPUT);
+  digitalWrite(LED, HIGH);
+
+  pinMode(M1, OUTPUT);
+  pinMode(M0, OUTPUT);
+  loraMode(NORMAL);
+  
   delay(4000);
   Serial.println("Loggerhead Smart Buoy");
   Serial1.println("Smart Buoy");
 
+  
+  displayOn();
+  cDisplay();
+  display.println("Loggerhead");
+  display.setCursor(0, displayLine3);
+  display.setTextSize(2);
+  display.print("Buoy ");
+  display.print(BUOY);
+  display.display();
+
   gpsSpewOn();
   gpsTimeout = 0;
+  digitalWrite(LED, LOW);
 }
 
 int counter;
@@ -57,10 +98,16 @@ void loop() {
         Serial.write(incomingByte);
         gps(incomingByte);  // parse incoming GPS data
     }
+    if(goodGPS){
+      cDisplay();
+      displayGps();
+      display.display();
+    }
   }
 
   // only send every timeout
   if(millis()-startTime>=gpsTimeOutThreshold){
+    digitalWrite(LED, HIGH);
     Serial1.write('*');
     Serial1.print(BUOY);
     Serial1.print(":");
@@ -80,4 +127,44 @@ void loop() {
     Serial.println('!');
   }
   startTime = millis();
+  digitalWrite(LED, LOW);
 }
+
+float readVoltage(){
+   float  voltage = 0;
+   float vDivider = 2.1; //when using 3.3 V ref R9 100K
+   //float vDivider = 4.5;  // when using 1.2 V ref R9 301K
+   float vRef = 3.3;
+   pinMode(vSense, INPUT);  // get ready to read voltage
+   if (vRef==1.2) analogReference(INTERNAL); //1.2V ref more stable than 3.3 according to PJRC
+   int navg = 32;
+   for(int n = 0; n<navg; n++){
+    voltage += (float) analogRead(vSense);
+   }
+   voltage = vDivider * vRef * voltage / 1024.0 / navg;  
+   pinMode(vSense, OUTPUT);  // done reading voltage
+   return voltage;
+}
+
+void loraMode(int mode){
+  switch(mode){
+    case NORMAL: 
+      digitalWrite(M0, LOW);
+      digitalWrite(M1, LOW);
+      break;
+    case WAKEUP:
+      digitalWrite(M0, LOW);
+      digitalWrite(M1, HIGH);
+      break;
+    case POWERSAVING:
+      digitalWrite(M0, HIGH);
+      digitalWrite(M1, LOW);
+      break;
+    case SLEEP:
+      digitalWrite(M0, HIGH);
+      digitalWrite(M1, HIGH);
+      break;
+  }
+  
+}
+
